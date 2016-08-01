@@ -60,7 +60,7 @@ func newController(options controllerOptions) (*controller, error) {
 			ctl.configMapName, ctl.namespace)
 	}
 
-	if err := ctl.populateDirectoryFromConfigMap(*configMap); err != nil {
+	if err := ctl.updateFromConfigMap(*configMap); err != nil {
 		return nil, fmt.Errorf("Unable to populate configuration directory: %s", err)
 	}
 
@@ -70,7 +70,7 @@ func newController(options controllerOptions) (*controller, error) {
 				curMap := cur.(*api.ConfigMap)
 				if curMap.Namespace == ctl.namespace &&
 					curMap.Name == ctl.configMapName {
-					if err := ctl.populateDirectoryFromConfigMap(*curMap); err != nil {
+					if err := ctl.updateFromConfigMap(*curMap); err != nil {
 						glog.Errorf("Unable to populate configuration directory: %s", err)
 					}
 				}
@@ -112,7 +112,7 @@ func (ctl *controller) Run() error {
 	return nil
 }
 
-func (ctl *controller) populateDirectoryFromConfigMap(cm api.ConfigMap) error {
+func (ctl *controller) updateFromConfigMap(cm api.ConfigMap) error {
 	if ctl.stopping {
 		return nil
 	}
@@ -144,5 +144,9 @@ func (ctl *controller) populateDirectoryFromConfigMap(cm api.ConfigMap) error {
 		ctl.writtenFiles[fileName] = struct{}{}
 	}
 
-	return ctl.reloadable.Reload()
+	if err := ctl.reloadable.Reload(); err != nil {
+		return errors.Wrapf(err, "Unable to reload")
+	}
+
+	return nil
 }

@@ -40,7 +40,7 @@ func (e *HTTPEndpoint) Reload() error {
 		resp, err := e.client.Do(req)
 		if err != nil {
 			glog.Warningf("%s request to %s failed", e.method, e.url)
-			return errors.Wrapf(err, "%s request to %s failed", e.method, e.url)
+			return errors.Wrapf(err, "%s request to %s failed: %s", e.method, e.url, err)
 		}
 		if resp.StatusCode != 200 {
 			glog.Warningf("Unexpected status code %d from %s", resp.StatusCode, e.url)
