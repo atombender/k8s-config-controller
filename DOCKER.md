@@ -81,6 +81,9 @@ spec:
       value: http://localhost:9090/-/reload
     - name: CONFIG_CONTROLLER_METHOD
       value: POST
+    volumeMounts:
+    - name: configs
+      mountPath: /mnt/prometheus-config
   volumes:
   # Obviously you will want to use persistent volumes here
   - name: configs
