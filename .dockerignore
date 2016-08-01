@@ -1,0 +1,4 @@
+_trash
+.git
+vendor/k8s.io/kubernetes/logo
+vendor/k8s.io/kubernetes/contrib

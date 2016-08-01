@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eux
+
+if [[ $(git status --porcelain --untracked-files=no --ignore-submodules | wc -l) != '0' ]]; then
+  echo "There are uncommitted changes in ${PWD}."
+  exit 1
+fi
+
+commit=$(git rev-parse HEAD)
+
+# Build in temporary container
+mkdir -p build
+docker build -f Dockerfile.build -t k8s-config-controller:BUILD .
+docker run --volume=${PWD}/build:/build:rw k8s-config-controller:BUILD
+
+# Build real container
+docker build \
+  -t atombender/k8s-config-controller:${commit} \
+  -t atombender/k8s-config-controller:latest .
+docker push atombender/k8s-config-controller:${commit}
+docker push atombender/k8s-config-controller:latest

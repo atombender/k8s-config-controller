@@ -1,0 +1,15 @@
+FROM golang:alpine
+
+COPY *.go ${GOPATH}/src/github.com/atombender/k8s-config-controller/
+COPY vendor ${GOPATH}/src/github.com/atombender/k8s-config-controller/vendor/
+
+RUN \
+     apk update && apk add make git mercurial gcc g++ \
+  && cd ${GOPATH}/src/github.com/atombender/k8s-config-controller \
+  && go build -o ${GOPATH}/bin/config-controller
+
+VOLUME ["/build"]
+
+CMD ["/bin/cp", \
+  "/go/bin/config-controller", \
+  "/build/"]
