@@ -17,4 +17,4 @@ ENTRYPOINT ["/bin/config-controller", \
   "--configroot=${CONFIG_CONTROLLER_CONFIGROOT}", \
   "--configmap=${CONFIG_CONTROLLER_CONFIGMAP}", \
   "--reload-http=${CONFIG_CONTROLLER_URL}", \
-  "--reload-http-url=${CONFIG_CONTROLLER_METHOD}"]
+  "--reload-http-method=${CONFIG_CONTROLLER_METHOD}"]
