@@ -11,10 +11,6 @@ ENV \
   CONFIG_CONTROLLER_METHOD=POST \
   GO15VENDOREXPERIMENT=1
 
-COPY build/config-controller /bin/
+COPY build/config-controller start-config-controller /bin/
 
-ENTRYPOINT ["/bin/config-controller", \
-  "--configroot=${CONFIG_CONTROLLER_CONFIGROOT}", \
-  "--configmap=${CONFIG_CONTROLLER_CONFIGMAP}", \
-  "--reload-http=${CONFIG_CONTROLLER_URL}", \
-  "--reload-http-method=${CONFIG_CONTROLLER_METHOD}"]
+ENTRYPOINT ["/bin/start-config-controller"]
