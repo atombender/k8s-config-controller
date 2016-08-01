@@ -22,7 +22,11 @@ var (
 	configMapArg = flags.String("configmap", "",
 		`Name of the ConfigMap that contains the Prometheus configuration`)
 
-	configRoot = flags.String("configroot", "", `Location where configmap will be mounted`)
+	configRootDir = flags.String("configroot", "", `Location where configmap will be mounted`)
+
+	reloadHTTPURL = flags.String("reload-http", "", `HTTP endpoint to invoke to reload`)
+
+	reloadHTTPMethod = flags.String("reload-http-method", "POST", `HTTP method to use to reload`)
 )
 
 func main() {
@@ -35,7 +39,7 @@ func main() {
 		glog.Fatal("Name of configmap must be specified")
 	}
 
-	if configRoot == nil || *configRoot == "" {
+	if configRootDir == nil || *configRootDir == "" {
 		glog.Fatal("Configuration root directory must be specified")
 	}
 
@@ -58,12 +62,6 @@ func main() {
 		glog.Fatalf("Could not create the client: %s", err)
 	}
 
-	if flags.ArgsLenAtDash() == -1 {
-		glog.Fatal("Application command line required")
-	}
-	appCommand := flags.Args()[flags.ArgsLenAtDash()]
-	appArgs := flags.Args()[flags.ArgsLenAtDash()+1:]
-
 	errorCh := make(chan error)
 	go func() {
 		err := <-errorCh
@@ -74,21 +72,35 @@ func main() {
 		}
 	}()
 
-	processMgr, err := newProcessManager(processManagerOptions{
-		command:    appCommand,
-		args:       appArgs,
-		configRoot: *configRoot,
-		errorCh:    errorCh,
-	})
-	if err != nil {
-		glog.Fatalf("Failed to set up process manager: %s", err)
+	var reloadable Reloadable
+	if flags.ArgsLenAtDash() == -1 {
+		if reloadHTTPURL == nil || *reloadHTTPURL == "" {
+			glog.Fatal("Application command line or HTTP endpoint required")
+		}
+		var method string
+		if reloadHTTPMethod != nil && *reloadHTTPMethod != "" {
+			method = *reloadHTTPMethod
+		}
+		reloadable = NewHTTPEndpoint(*reloadHTTPURL, method)
+	} else {
+		appCommand := flags.Args()[flags.ArgsLenAtDash()]
+		appArgs := flags.Args()[flags.ArgsLenAtDash()+1:]
+		reloadable, err = NewProcessManager(ProcessManagerOptions{
+			command: appCommand,
+			args:    appArgs,
+			errorCh: errorCh,
+		})
+		if err != nil {
+			glog.Fatal(err)
+		}
 	}
 
 	ctl, err := newController(controllerOptions{
-		client:         client,
-		namespace:      namespace,
-		configMapName:  configMapName,
-		processManager: processMgr,
+		client:        client,
+		namespace:     namespace,
+		configMapName: configMapName,
+		configRootDir: *configRootDir,
+		reloadable:    reloadable,
 	})
 	if err != nil {
 		glog.Fatalf("%s", err)
