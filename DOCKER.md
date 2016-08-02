@@ -2,11 +2,11 @@
 
 **This is a sidecar application for Kubernetes that unpacks a configmap whenever it changes, and sends a signal to reload an application**.
 
-Under Kubernetes, configmaps mounted into pods are immutable; they're snapshots of the version of the configmap that existed when the pod launched. To make the application reflect any changes to a configmap, you normally have to redeploy the application.
+Under Kubernetes, configmaps mounted into pods generally require an application to be redeployed in order for the application to pick up changes.
 
-This is, of course, often desirable when the application has a release-oriented lifecycle. However, for long-running infrastructure-oriented apps — some examples include Prometheus, Nginx, PostgreSQL and HAProxy — the lifecycle is not always released-oriented, but configuration-oriented. For example, adding a new alert to Prometheus should not require a redeploy.
+This is, of course, often desirable when the application has a release-oriented lifecycle. However, for long-running infrastructure-oriented apps — some examples include Prometheus, Nginx, PostgreSQL and HAProxy — the lifecycle is not released-oriented, but configuration-oriented. For example, adding a new alert to Prometheus should not require a redeploy.
 
-This controller solves this problem by monitoring the configmap for changes and populating a folder with its contents, then signaling the application to reload its configuration.
+This controller solves this problem by monitoring the configmap for changes and populating a folder with its contents, then reloading the application.
 
 ## Operation
 
@@ -20,6 +20,7 @@ Note that there are two requirements:
 
 * The application must be reloadable via HTTP(S).
 * The configuration volume must be shared between the sidecar controller and the application's container.
+* The configmap is not _mounted_ using `volumeMounts`. The controller takes care of the syncing.
 
 ## Environment variables
 
